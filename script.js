@@ -1,7 +1,49 @@
-/* 電圧降下計算ツール（keisou-lab対応版）
- * cable_data.json を GitHub Pages から絶対パスで取得
- * https://keisou-lab.github.io/voltage-drop-keisan-tool/cable_data.json
- */
+/* 電圧降下計算ツール（fetch不要・埋め込みデータ版） */
+
+// ▼ケーブルデータを直埋め込み（あなたが送ってくれたJSON）
+const cableData = {
+  "AE": { "resistivity": 0.02826, "material": "アルミ", "sections": [22, 38, 60, 100, 150] },
+  "AZ-C": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5, 5.5, 8] },
+  "AZ-C-EM": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5, 5.5] },
+  "AZ-CP": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5] },
+  "AZ-CP-EM": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5] },
+  "AZ-CS-EM": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
+  "AZ-CSLA": { "resistivity": 0.01724, "material": "銅", "sections": [3.5, 5.5, 8, 14] },
+  "AZ-K-EM": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
+  "AZ-KS-EM": { "resistivity": 0.01724, "material": "銅", "sections": [3.5, 5.5, 8] },
+  "AZ-V": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5] },
+  "AZ-VS": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
+  "CV": { "resistivity": 0.01724, "material": "銅", "sections": [8, 14, 22, 38, 60, 100, 150] },
+  "CVQ": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5, 8, 14] },
+  "CVT": { "resistivity": 0.01724, "material": "銅", "sections": [60, 100, 150, 200, 250] },
+  "CVV": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2, 3.5, 5.5] },
+  "CVVS": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2, 3.5] },
+  "EM-AE": { "resistivity": 0.02826, "material": "アルミ", "sections": [22, 38, 60, 100] },
+  "EM-CE": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
+  "EM-CEE": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
+  "EM-CEES": { "resistivity": 0.01724, "material": "銅", "sections": [3.5, 5.5, 8] },
+  "EM-CEQ": { "resistivity": 0.01724, "material": "銅", "sections": [3.5, 5.5, 8] },
+  "EM-CET": { "resistivity": 0.01724, "material": "銅", "sections": [8, 14, 22, 38] },
+  "EM-CPEE-SCT": { "resistivity": 0.01724, "material": "銅", "sections": [3.5, 5.5, 8, 14] },
+  "EM-EEF": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
+  "EM-EER": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5, 8] },
+  "EM-FCPEE": { "resistivity": 0.01780, "material": "錫メッキ銅", "sections": [0.5, 0.75, 1.25, 2] },
+  "EM-FP": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
+  "EM-HP": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5, 8] },
+  "EM-IE": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5] },
+  "EM-JKPEE.F-S": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2] },
+  "FCPEV": { "resistivity": 0.01780, "material": "錫メッキ銅", "sections": [0.5, 0.75, 1.25, 2] },
+  "FCPEVS": { "resistivity": 0.01780, "material": "錫メッキ銅", "sections": [0.3, 0.5, 0.75, 1.25] },
+  "HIV": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2, 3.5] },
+  "HP": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5] },
+  "IV": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2, 3.5, 5.5] },
+  "JKPEVS": { "resistivity": 0.01724, "material": "銅", "sections": [0.5, 0.75, 1.25] },
+  "VVF": { "resistivity": 0.01724, "material": "銅", "sections": [1.6, 2.0, 3.2] },
+  "VVR": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5, 5.5] },
+  "Z-JKVV": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2] },
+  "Z-JKVV-SLA": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2] },
+  "MVVS": { "resistivity": 0.01780, "material": "錫メッキ銅", "sections": [0.3, 0.5, 0.75, 1.25, 2] }
+};
 
 const cableTypeSel = document.getElementById('cableType');
 const sectionSel   = document.getElementById('section');
@@ -14,39 +56,22 @@ const maxDropInput = document.getElementById('maxDropRate');
 const resultBox    = document.getElementById('result');
 const suggestBox   = document.getElementById('suggest');
 
-// JSONファイルURL（絶対パス）
-const JSON_URL = 'https://keisou-lab.github.io/voltage-drop-keisan-tool/cable_data.json';
-
-let cableData = {};
-let ready = false;
-
-// JSONを読み込む
-fetch(JSON_URL)
-  .then(r => {
-    if (!r.ok) throw new Error("JSONファイルが見つかりません");
-    return r.json();
-  })
-  .then(json => {
-    cableData = json;
-    Object.keys(cableData).forEach(type => {
-      const opt = document.createElement('option');
-      opt.value = type;
-      opt.textContent = `${type}（${cableData[type].material}）`;
-      cableTypeSel.appendChild(opt);
-    });
-    ready = true;
-  })
-  .catch(err => {
-    resultBox.innerHTML = `<b style="color:#b00">⚠ cable_data.json の読み込みに失敗しました。<br>${err.message}</b>`;
+// 初期化：ケーブル一覧を表示
+(function init() {
+  Object.keys(cableData).forEach(type => {
+    const opt = document.createElement('option');
+    opt.value = type;
+    opt.textContent = `${type}（${cableData[type].material}）`;
+    cableTypeSel.appendChild(opt);
   });
+})();
 
-// ケーブル選択時に断面積リスト更新
+// ケーブル変更時：断面積リスト更新
 cableTypeSel.addEventListener('change', () => {
   sectionSel.innerHTML = '<option value="">未指定（自動提案）</option>';
   const type = cableTypeSel.value;
   if (type && cableData[type]) {
-    const list = cableData[type].sections;
-    list.forEach(s => {
+    cableData[type].sections.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s;
       opt.textContent = `${s} mm²`;
@@ -55,7 +80,7 @@ cableTypeSel.addEventListener('change', () => {
   }
 });
 
-// 計算ロジック
+// 計算本体
 function calcDrop({ rho, section, sys, pf, V, I, L }) {
   const loopR = (rho * (2 * L)) / section; // Ω
   let Vdrop, note = '';
@@ -83,13 +108,13 @@ function calcDrop({ rho, section, sys, pf, V, I, L }) {
 
 // 計算ボタン
 document.getElementById('calcBtn').addEventListener('click', () => {
-  if (!ready) {
-    resultBox.innerHTML = '<b style="color:#b00">データがまだ読み込まれていません。</b>';
+  const type = cableTypeSel.value;
+  if (!type) {
+    resultBox.innerHTML = `<b style="color:#b00">⚠ ケーブル種類を選択してください。</b>`;
     return;
   }
 
-  const type = cableTypeSel.value;
-  const rho  = Number(cableData?.[type]?.resistivity || 0.01724);
+  const rho  = Number(cableData[type].resistivity);
   const sys  = systemSel.value;
   const pf   = clamp(Number(pfInput.value || 1), 0, 1);
   const V    = Number(vInput.value);
@@ -98,8 +123,8 @@ document.getElementById('calcBtn').addEventListener('click', () => {
   const Aopt = sectionSel.value ? Number(sectionSel.value) : null;
   const maxDrop = Number(maxDropInput.value);
 
-  if (!V || !I || !L || !type) {
-    resultBox.innerHTML = `<b style="color:#b00">⚠ 電圧・電流・距離・ケーブル種類を入力してください。</b>`;
+  if (!V || !I || !L) {
+    resultBox.innerHTML = `<b style="color:#b00">⚠ 電圧・電流・距離を入力してください。</b>`;
     return;
   }
 
@@ -126,14 +151,14 @@ document.getElementById('calcBtn').addEventListener('click', () => {
     suggestBox.innerHTML = `
       <b>💡 推奨断面積：</b><span class="pill">${chosen.s} mm²</span>
       （目標降下率 ${target}% 以下）<br>
-      <span class="note">※ 実際の設計では許容電流・温度条件も考慮してください。</span>
+      <span class="note">※ 実務では許容電流・敷設条件も確認してください。</span>
     `;
   } else {
     resultBox.innerHTML = renderResult(type, rho, list.at(-1), last);
     suggestBox.style.display = 'block';
     suggestBox.innerHTML = `
       <b>⚠ 最大断面 ${list.at(-1)} mm² でも降下率 ${target}% を満たせません。</b><br>
-      ・距離短縮や電流削減、昇圧などを検討してください。
+      ・距離短縮／電流低減／昇圧などを検討してください。
     `;
   }
 });

@@ -4,37 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>電圧降下合計計算ツール｜keisou-lab</title>
+  <meta name="description" content="複数区間のケーブルを登録して電圧降下率を合計。VVF・CV・EMなど各種ケーブルに対応した電圧降下計算ツール。">
 
-  <meta name="description" content="複数区間のケーブルを登録し、電圧降下率を自動合計。VVF・CVV・EMなど各種ケーブルに対応した電圧降下計算ツール。">
   <link rel="stylesheet" href="style.css" />
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 20px; line-height: 1.6; }
-    input, select, button { font-size: 1em; padding: 6px; margin: 4px 0; }
-    button { background-color: #0078d7; color: white; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
-    button:hover { background-color: #005fa3; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-    th { background: #eef; }
-    .note { font-size: .9rem; color: #555; }
-    .result-card { background: #f8f9fa; padding: 12px; border-radius: 6px; margin-top: 12px; }
-    .pill { display:inline-block;background:#eef;border-radius:999px;padding:.15rem .6rem;margin-right:.4rem }
-  </style>
 </head>
 <body>
   <h1>電圧降下合計計算ツール</h1>
   <p class="note">
-    ケーブルを1本ずつ追加して、全体の電圧降下率を合計します。<br>
-    降下率が許容値を下回れば <b style="color:green">OK</b>、超えた場合は <b style="color:red">NG</b> を表示します。
+    ケーブルを1本ずつ追加して全体の電圧降下率を合計します。<br>
+    許容降下率を下回れば <b style="color:green">OK</b>、超えたら <b style="color:red">NG</b>。
   </p>
 
   <div class="container">
     <label>ケーブル種類:
       <select id="cableType"></select>
-    </label><br>
+    </label>
 
     <label>断面積 (mm²):
       <select id="section"><option value="">未指定（最小値）</option></select>
-    </label><br>
+    </label>
 
     <label>系統:
       <select id="system">
@@ -42,32 +30,29 @@
         <option value="ac1">単相2線</option>
         <option value="ac3">三相3線</option>
       </select>
-    </label><br>
+    </label>
 
-    <label>力率 (pf 0〜1): <input id="pf" type="number" step="0.01" value="1.00"></label><br>
-    <label>電圧 (V): <input id="voltage" type="number" placeholder="例: 100"></label><br>
-    <label>電流 (A): <input id="current" type="number" placeholder="例: 15"></label><br>
-    <label>距離 (m): <input id="length" type="number" placeholder="例: 20"></label><br>
-    <label>許容電圧降下率 (%): <input id="maxDropRate" type="number" step="0.1" value="3"></label><br>
+    <label>力率 (0〜1): <input id="pf" type="number" step="0.01" value="1.00"></label>
+    <label>電圧 (V): <input id="voltage" type="number" placeholder="例: 100"></label>
+    <label>電流 (A): <input id="current" type="number" placeholder="例: 15"></label>
+    <label>距離 (m): <input id="length" type="number" placeholder="例: 20"></label>
+    <label>許容電圧降下率 (%): <input id="maxDropRate" type="number" step="0.1" value="3"></label>
 
     <button id="calcBtn">計算して追加</button>
-    <button id="resetBtn" style="background:#999;margin-left:6px;">リセット</button>
+    <button id="resetBtn" class="gray">リセット</button>
   </div>
 
   <h2>ケーブル区間一覧</h2>
   <table id="table">
     <thead>
-      <tr><th>ケーブル</th><th>断面積</th><th>距離(m)</th><th>降下(V)</th><th>降下率(%)</th><th>末端電圧(V)</th></tr>
+      <tr>
+        <th>ケーブル</th><th>断面積</th><th>距離(m)</th><th>降下(V)</th><th>降下率(%)</th><th>末端電圧(V)</th>
+      </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <div id="summary" class="result-card"></div>
-
-  <p class="note">
-    ※ 各区間の降下率を合計して許容値と比較しています。<br>
-    ※ 三相・単相・直流すべて抵抗成分による簡易評価です。
-  </p>
 
   <script src="script.js"></script>
 </body>

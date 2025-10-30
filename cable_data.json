@@ -24,20 +24,5 @@
   "EM-CPEE-SCT": { "resistivity": 0.01724, "material": "銅", "sections": [3.5, 5.5, 8, 14] },
   "EM-EEF": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
   "EM-EER": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5, 8] },
-  "EM-FCPEE": { "resistivity": 0.01780, "material": "錫メッキ銅", "sections": [0.5, 0.75, 1.25, 2] },
-  "EM-FP": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5] },
-  "EM-HP": { "resistivity": 0.01724, "material": "銅", "sections": [2, 3.5, 5.5, 8] },
-  "EM-IE": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5] },
-  "EM-JKPEE.F-S": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2] },
-  "FCPEV": { "resistivity": 0.01780, "material": "錫メッキ銅", "sections": [0.5, 0.75, 1.25, 2] },
-  "FCPEVS": { "resistivity": 0.01780, "material": "錫メッキ銅", "sections": [0.3, 0.5, 0.75, 1.25] },
-  "HIV": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2, 3.5] },
-  "HP": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5] },
-  "IV": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2, 3.5, 5.5] },
-  "JKPEVS": { "resistivity": 0.01724, "material": "銅", "sections": [0.5, 0.75, 1.25] },
-  "VVF": { "resistivity": 0.01724, "material": "銅", "sections": [1.6, 2.0, 3.2] },
-  "VVR": { "resistivity": 0.01724, "material": "銅", "sections": [1.25, 2, 3.5, 5.5] },
-  "Z-JKVV": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2] },
-  "Z-JKVV-SLA": { "resistivity": 0.01724, "material": "銅", "sections": [0.75, 1.25, 2] },
-  "MVVS": { "resistivity": 0.01780, "material": "錫メッキ銅", "sections": [0.3, 0.5, 0.75, 1.25, 2] }
+  "VVF": { "resistivity": 0.01724, "material": "銅", "sections": [1.6, 2.0, 3.2] }
 }

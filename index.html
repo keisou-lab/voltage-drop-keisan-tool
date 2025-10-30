@@ -4,88 +4,114 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>電圧降下合計計算ツール｜keisou-lab</title>
-  <meta name="description" content="複数区間のケーブルを登録して電圧降下率を合計。VVF・CVV・EMなど各種ケーブルに対応した電圧降下計算ツール。第二種電気工事士・設備設計・DIYユーザー向け。">
-  <link rel="stylesheet" href="style.css" />
+
+  <meta name="description" content="複数区間の電圧降下を合計して判定。VVF・CVVなど各種ケーブルに対応した無料Webツール。" />
+  <link rel="canonical" href="https://keisou-lab.github.io/voltage-drop-keisan-tool/" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 
 <body>
-  <h1>電圧降下合計計算ツール</h1>
+  <header>
+    <h1>電圧降下合計計算ツール</h1>
+    <p class="note">ケーブルを1本ずつ追加して全体の電圧降下率を合計します。<br>
+      合計降下率が許容値を下回れば <span class="ok">OK</span>、超えたら <span class="ng">NG</span>。
+    </p>
+  </header>
 
-  <p class="note">
-    ケーブルを1本ずつ登録して、全体の電圧降下率を自動計算します。<br>
-    許容降下率を下回れば <b style="color:green">OK</b>、超えると <b style="color:red">NG</b> になります。
-  </p>
+  <main>
+    <section id="input-section">
+      <div class="grid">
+        <label>ケーブル種類:
+          <select id="cableType"></select>
+        </label>
 
-  <div class="container">
-    <label>ケーブル種類:
-      <select id="cableType"></select>
-    </label>
+        <label>断面積 (mm²):
+          <select id="section">
+            <option value="">未指定（最小値）</option>
+          </select>
+        </label>
 
-    <label>断面積 (mm²):
-      <select id="section"><option value="">未指定（最小値）</option></select>
-    </label>
+        <label>系統:
+          <select id="system">
+            <option value="dc">直流</option>
+            <option value="ac1">単相2線（力率考慮）</option>
+            <option value="ac3">三相3線（力率考慮）</option>
+          </select>
+        </label>
 
-    <label>系統:
-      <select id="system">
-        <option value="dc">直流</option>
-        <option value="ac1">単相2線</option>
-        <option value="ac3">三相3線</option>
-      </select>
-    </label>
+        <label>力率（pf 0〜1）:
+          <input id="pf" type="number" step="0.01" min="0" max="1" value="1.00" />
+        </label>
 
-    <label>力率 (pf、0〜1): 
-      <input id="pf" type="number" step="0.01" value="0.90">
-      <span class="help">（目安：VAVやファン＝0.9前後、照明・ヒーター＝1.0）</span>
-    </label>
+        <label>電圧 (V):
+          <input id="voltage" type="number" placeholder="例: 100" />
+        </label>
 
-    <label>電圧 (V): <input id="voltage" type="number" placeholder="例: 200"></label>
-    <label>電流 (A): <input id="current" type="number" placeholder="例: 10"></label>
-    <label>距離 (m): <input id="length" type="number" placeholder="例: 20"></label>
-    <label>許容電圧降下率 (%): <input id="maxDropRate" type="number" step="0.1" value="10"></label>
+        <label>電流 (A):
+          <input id="current" type="number" placeholder="例: 15" />
+        </label>
 
-    <button id="calcBtn">計算して追加</button>
-    <button id="resetBtn" class="gray">リセット</button>
-  </div>
+        <label>距離 (m)（片道）:
+          <input id="length" type="number" placeholder="例: 20" />
+        </label>
 
-  <h2>ケーブル区間一覧</h2>
-  <table id="table">
-    <thead>
-      <tr>
-        <th>ケーブル</th><th>断面積</th><th>距離(m)</th><th>降下(V)</th><th>降下率(%)</th><th>末端電圧(V)</th><th>削除</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+        <label>許容電圧降下率 (%):
+          <input id="maxDropRate" type="number" step="0.1" value="10" />
+        </label>
+      </div>
 
-  <div id="summary" class="result-card"></div>
+      <div class="btn-group">
+        <button id="calcBtn" class="primary">計算して追加</button>
+        <button id="resetBtn" class="secondary">リセット</button>
+      </div>
+    </section>
 
-  <hr>
-  <h2>このツールについて</h2>
-  <p>
-    本ツールは、電圧降下率の許容範囲を確認するための無料Webアプリです。<br>
-    電圧・電流・距離・ケーブル種別を入力すると、各区間ごとの電圧降下と全体の降下率を自動で算出します。<br>
-    材質（銅・アルミ・錫メッキ銅）の抵抗率を考慮し、VVF・CV・EMなど多様なケーブルに対応しています。
-  </p>
-  <p>
-    計装工事・電気設備設計・DIYなど、現場や学習用途にご活用ください。
-  </p>
+    <section id="table-section">
+      <h2>ケーブル区間一覧</h2>
+      <table id="cableTable">
+        <thead>
+          <tr>
+            <th>ケーブル</th>
+            <th>断面積</th>
+            <th>距離</th>
+            <th>電圧降下率(%)</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
-  <hr>
-  <h2>プライバシーポリシー</h2>
-  <p>
-    当サイトでは、Google AdSenseなどの第三者配信広告サービスを利用しています。<br>
-    広告配信事業者はCookieを使用して、ユーザーの興味に基づく広告を表示する場合があります。<br>
-    詳細は
-    <a href="https://policies.google.com/technologies/ads?hl=ja" target="_blank">Googleの広告ポリシー</a>をご覧ください。
-  </p>
-  <p>
-    入力データ（電圧・電流・距離など）はブラウザ内でのみ処理され、サーバーに送信・保存されません。安心してご利用いただけます。
-  </p>
+      <div id="totalBox" class="result-card"></div>
+
+      <button id="downloadCsvBtn" class="download">CSVとしてダウンロード</button>
+    </section>
+
+    <section id="about-section">
+      <h2>このツールについて</h2>
+      <p>
+        電圧降下とは、電線内の抵抗により電圧が低下する現象です。<br>
+        本ツールでは、複数のケーブル区間を合計して全体の電圧降下率を自動計算します。<br>
+        参考値として許容電圧降下率10%を設定していますが、用途に応じて変更可能です。
+      </p>
+      <p class="note">
+        ※計算は簡易式による概算です。実際の設計では、許容電流・温度・施工条件なども考慮してください。
+      </p>
+    </section>
+
+    <section id="policy-section">
+      <h2>プライバシーポリシー</h2>
+      <p>
+        本ツールでは個人情報を収集しません。<br>
+        入力されたデータはブラウザ内にのみ保存され、サーバーには送信されません。<br>
+        利用状況分析や広告配信のため、Google Analyticsなどの外部サービスを利用する場合があります。
+      </p>
+    </section>
+  </main>
 
   <footer>
-    <p>© 2025 keisou-lab</p>
+    <p>© 2025 keisou-lab | 電気工事士・DIY向け電圧降下計算ツール</p>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>

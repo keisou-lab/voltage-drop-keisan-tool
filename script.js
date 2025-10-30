@@ -1,38 +1,42 @@
-const cableTypeSel = document.getElementById('cableType');
-const sectionSel   = document.getElementById('section');
-const systemSel    = document.getElementById('system');
-const pfInput      = document.getElementById('pf');
-const vInput       = document.getElementById('voltage');
-const iInput       = document.getElementById('current');
-const lenInput     = document.getElementById('length');
-const maxDropInput = document.getElementById('maxDropRate');
-const resultBox    = document.getElementById('summary');
+/* 電圧降下合計計算ツール keisou-lab */
+const JSON_URL = "https://keisou-lab.github.io/voltage-drop-keisan-tool/cable_data.json";
+
+const cableTypeSel = document.getElementById("cableType");
+const sectionSel = document.getElementById("section");
+const systemSel = document.getElementById("system");
+const pfInput = document.getElementById("pf");
+const vInput = document.getElementById("voltage");
+const iInput = document.getElementById("current");
+const lenInput = document.getElementById("length");
+const maxDropInput = document.getElementById("maxDropRate");
+const resultTable = document.getElementById("cableTable").querySelector("tbody");
+const totalBox = document.getElementById("totalBox");
 
 let cableData = {};
-let segments = [];
+let list = JSON.parse(localStorage.getItem("vdropList") || "[]");
 
-// JSON読み込み
-fetch('cable_data.json')
+// ===== ケーブルデータ読込 =====
+fetch(JSON_URL)
   .then(r => r.json())
   .then(json => {
     cableData = json;
-    Object.keys(cableData).forEach(type => {
-      const opt = document.createElement('option');
+    Object.keys(json).forEach(type => {
+      const opt = document.createElement("option");
       opt.value = type;
-      opt.textContent = `${type}（${cableData[type].material}）`;
+      opt.textContent = `${type}（${json[type].material}）`;
       cableTypeSel.appendChild(opt);
     });
-    restoreData();
   })
-  .catch(() => alert('cable_data.json の読み込みに失敗しました。'));
+  .then(renderTable)
+  .catch(() => alert("ケーブルデータの読込に失敗しました"));
 
-// ケーブル選択時：断面積更新
-cableTypeSel.addEventListener('change', () => {
+// ===== ケーブル選択時、断面積更新 =====
+cableTypeSel.addEventListener("change", () => {
   sectionSel.innerHTML = '<option value="">未指定（最小値）</option>';
   const type = cableTypeSel.value;
   if (type && cableData[type]) {
     cableData[type].sections.forEach(s => {
-      const opt = document.createElement('option');
+      const opt = document.createElement("option");
       opt.value = s;
       opt.textContent = `${s} mm²`;
       sectionSel.appendChild(opt);
@@ -40,96 +44,108 @@ cableTypeSel.addEventListener('change', () => {
   }
 });
 
+// ===== 計算処理 =====
 function calcDrop({ rho, section, sys, pf, V, I, L }) {
   const loopR = (rho * (2 * L)) / section;
-  let Vdrop;
+  let Vdrop = 0;
   switch (sys) {
-    case 'dc':  Vdrop = I * loopR; break;
-    case 'ac1': Vdrop = I * loopR * pf; break;
-    case 'ac3': Vdrop = Math.sqrt(3) * I * (loopR / 2) * pf; break;
+    case "dc": Vdrop = I * loopR; break;
+    case "ac1": Vdrop = I * loopR * pf; break;
+    case "ac3": Vdrop = Math.sqrt(3) * I * (loopR / 2) * pf; break;
   }
   const dropRate = (Vdrop / V) * 100;
-  const Vend = V - Vdrop;
-  return { Vdrop, dropRate, Vend };
+  return { Vdrop, dropRate };
 }
 
-document.getElementById('calcBtn').addEventListener('click', () => {
+// ===== 追加ボタン =====
+document.getElementById("calcBtn").addEventListener("click", () => {
   const type = cableTypeSel.value;
-  if (!type) return alert('ケーブルを選択してください。');
-  const rho = cableData[type].resistivity;
+  const rho = Number(cableData?.[type]?.resistivity || 0.01724);
   const sys = systemSel.value;
-  const pf  = clamp(Number(pfInput.value || 0.9), 0, 1);
-  const V   = Number(vInput.value);
-  const I   = Number(iInput.value);
-  const L   = Number(lenInput.value);
-  const A   = sectionSel.value ? Number(sectionSel.value) : cableData[type].sections[0];
-  const maxDrop = Number(maxDropInput.value || 10);
-  if (!V || !I || !L) return alert('電圧・電流・距離を入力してください。');
+  const pf = Number(pfInput.value) || 1;
+  const V = Number(vInput.value);
+  const I = Number(iInput.value);
+  const L = Number(lenInput.value);
+  const A = Number(sectionSel.value || cableData?.[type]?.sections?.[0] || 2);
 
-  const r = calcDrop({ rho, section: A, sys, pf, V, I, L });
-  segments.push({ type, A, L, ...r, V });
-  saveData();
-  updateTable(maxDrop);
+  if (!type || !V || !I || !L) {
+    alert("ケーブル種類・電圧・電流・距離を入力してください");
+    return;
+  }
+
+  const result = calcDrop({ rho, section: A, sys, pf, V, I, L });
+  list.push({ type, section: A, length: L, drop: result.dropRate });
+  saveList();
+  renderTable();
 });
 
-document.getElementById('resetBtn').addEventListener('click', () => {
-  if (!confirm('全データを削除しますか？')) return;
-  segments = [];
-  saveData();
-  updateTable();
-});
-
-function updateTable(maxDrop = 10) {
-  const tbody = document.querySelector('#table tbody');
-  tbody.innerHTML = '';
-  let totalDropV = 0;
-  let baseV = segments[0]?.V || 0;
-
-  segments.forEach((seg, idx) => {
-    totalDropV += seg.Vdrop;
-    const tr = document.createElement('tr');
+// ===== 表示更新 =====
+function renderTable() {
+  resultTable.innerHTML = "";
+  list.forEach((r, idx) => {
+    const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${seg.type}</td>
-      <td>${seg.A}</td>
-      <td>${seg.L}</td>
-      <td>${seg.Vdrop.toFixed(2)}</td>
-      <td>${seg.dropRate.toFixed(2)}</td>
-      <td>${seg.Vend.toFixed(1)}</td>
+      <td>${r.type}</td>
+      <td>${r.section}</td>
+      <td>${r.length}</td>
+      <td>${r.drop.toFixed(3)}</td>
       <td><button class="delBtn" data-idx="${idx}">削除</button></td>
     `;
-    tbody.appendChild(tr);
+    resultTable.appendChild(tr);
   });
-
-  // 削除ボタン処理
-  document.querySelectorAll('.delBtn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      const idx = e.target.dataset.idx;
-      segments.splice(idx, 1);
-      saveData();
-      updateTable(maxDrop);
-    });
-  });
-
-  const totalRate = baseV ? (totalDropV / baseV * 100) : 0;
-  const ok = totalRate <= maxDrop;
-  resultBox.innerHTML = segments.length
-    ? `<b>合計電圧降下:</b> ${totalDropV.toFixed(2)} V<br>
-       <b>合計降下率:</b> ${totalRate.toFixed(2)} % →
-       <b style="color:${ok?'green':'red'}">${ok?'OK ✅':'NG ⚠'}</b><br>
-       （許容 ${maxDrop}% 以下）`
-    : '';
+  updateTotal();
 }
 
-function saveData() {
-  localStorage.setItem('vdrop_segments', JSON.stringify(segments));
+// ===== 合計・判定 =====
+function updateTotal() {
+  const total = list.reduce((sum, r) => sum + r.drop, 0);
+  const limit = Number(maxDropInput.value) || 10;
+  const ok = total <= limit;
+  totalBox.innerHTML = `
+    <b>合計電圧降下率：</b> ${total.toFixed(3)} %<br>
+    <b>許容値：</b> ${limit} % → 
+    <span style="color:${ok ? 'green' : 'red'};font-weight:bold">${ok ? 'OK' : 'NG'}</span>
+  `;
 }
 
-function restoreData() {
-  const saved = localStorage.getItem('vdrop_segments');
-  if (saved) {
-    segments = JSON.parse(saved);
-    updateTable();
+// ===== 削除ボタン =====
+resultTable.addEventListener("click", e => {
+  if (e.target.classList.contains("delBtn")) {
+    const idx = Number(e.target.dataset.idx);
+    list.splice(idx, 1);
+    saveList();
+    renderTable();
   }
+});
+
+// ===== リセット =====
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("すべて削除しますか？")) {
+    list = [];
+    saveList();
+    renderTable();
+  }
+});
+
+// ===== 自動保存 =====
+function saveList() {
+  localStorage.setItem("vdropList", JSON.stringify(list));
 }
 
-function clamp(v, min, max){ return Math.min(Math.max(v, min), max); }
+// ===== CSV出力 =====
+document.getElementById("downloadCsvBtn").addEventListener("click", () => {
+  if (!list.length) {
+    alert("データがありません");
+    return;
+  }
+  const header = ["ケーブル", "断面積(mm²)", "距離(m)", "電圧降下率(%)"];
+  const rows = list.map(r => [r.type, r.section, r.length, r.drop.toFixed(3)]);
+  const csv = [header, ...rows].map(e => e.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "vdrop_result.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+});

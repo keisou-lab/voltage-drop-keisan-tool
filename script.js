@@ -11,7 +11,7 @@ const resultBox    = document.getElementById('summary');
 let cableData = {};
 let segments = [];
 
-// cable_data.json 読み込み
+// JSON読み込み
 fetch('cable_data.json')
   .then(r => r.json())
   .then(json => {
@@ -22,10 +22,9 @@ fetch('cable_data.json')
       opt.textContent = `${type}（${cableData[type].material}）`;
       cableTypeSel.appendChild(opt);
     });
+    restoreData();
   })
-  .catch(() => {
-    alert('cable_data.json の読み込みに失敗しました。');
-  });
+  .catch(() => alert('cable_data.json の読み込みに失敗しました。'));
 
 // ケーブル選択時：断面積更新
 cableTypeSel.addEventListener('change', () => {
@@ -59,36 +58,58 @@ document.getElementById('calcBtn').addEventListener('click', () => {
   if (!type) return alert('ケーブルを選択してください。');
   const rho = cableData[type].resistivity;
   const sys = systemSel.value;
-  const pf  = clamp(Number(pfInput.value || 1), 0, 1);
+  const pf  = clamp(Number(pfInput.value || 0.9), 0, 1);
   const V   = Number(vInput.value);
   const I   = Number(iInput.value);
   const L   = Number(lenInput.value);
   const A   = sectionSel.value ? Number(sectionSel.value) : cableData[type].sections[0];
-  const maxDrop = Number(maxDropInput.value || 3);
+  const maxDrop = Number(maxDropInput.value || 10);
   if (!V || !I || !L) return alert('電圧・電流・距離を入力してください。');
 
   const r = calcDrop({ rho, section: A, sys, pf, V, I, L });
   segments.push({ type, A, L, ...r, V });
+  saveData();
   updateTable(maxDrop);
 });
 
 document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('全データを削除しますか？')) return;
   segments = [];
+  saveData();
   updateTable();
 });
 
-function updateTable(maxDrop = 3) {
+function updateTable(maxDrop = 10) {
   const tbody = document.querySelector('#table tbody');
   tbody.innerHTML = '';
   let totalDropV = 0;
   let baseV = segments[0]?.V || 0;
-  segments.forEach(seg => {
+
+  segments.forEach((seg, idx) => {
     totalDropV += seg.Vdrop;
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${seg.type}</td><td>${seg.A}</td><td>${seg.L}</td>
-                    <td>${seg.Vdrop.toFixed(2)}</td><td>${seg.dropRate.toFixed(2)}</td><td>${seg.Vend.toFixed(1)}</td>`;
+    tr.innerHTML = `
+      <td>${seg.type}</td>
+      <td>${seg.A}</td>
+      <td>${seg.L}</td>
+      <td>${seg.Vdrop.toFixed(2)}</td>
+      <td>${seg.dropRate.toFixed(2)}</td>
+      <td>${seg.Vend.toFixed(1)}</td>
+      <td><button class="delBtn" data-idx="${idx}">削除</button></td>
+    `;
     tbody.appendChild(tr);
   });
+
+  // 削除ボタン処理
+  document.querySelectorAll('.delBtn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const idx = e.target.dataset.idx;
+      segments.splice(idx, 1);
+      saveData();
+      updateTable(maxDrop);
+    });
+  });
+
   const totalRate = baseV ? (totalDropV / baseV * 100) : 0;
   const ok = totalRate <= maxDrop;
   resultBox.innerHTML = segments.length
@@ -97,6 +118,18 @@ function updateTable(maxDrop = 3) {
        <b style="color:${ok?'green':'red'}">${ok?'OK ✅':'NG ⚠'}</b><br>
        （許容 ${maxDrop}% 以下）`
     : '';
+}
+
+function saveData() {
+  localStorage.setItem('vdrop_segments', JSON.stringify(segments));
+}
+
+function restoreData() {
+  const saved = localStorage.getItem('vdrop_segments');
+  if (saved) {
+    segments = JSON.parse(saved);
+    updateTable();
+  }
 }
 
 function clamp(v, min, max){ return Math.min(Math.max(v, min), max); }
